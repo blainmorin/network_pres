@@ -280,7 +280,7 @@ renderForceNetwork({
 
 ## TERGM
 
-```{r}
+```{r, results='hide'}
 
 
 years = seq(1974, 2012, by = 1)
@@ -373,7 +373,8 @@ render.d3movie(sampdyn,
                                extraPlotCmds=NULL,
                                initial.coords=0),
                d3.options = list(animateOnLoad = TRUE, animationDuration = 3000,
-                                 durationControl=TRUE))
+                                 durationControl=TRUE),
+               output.mode = 'htmlWidget')
 
 
 
