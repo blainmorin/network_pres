@@ -23,8 +23,8 @@ library(statnet)
 library(ndtv)
 library(latticeExtra)
 
-ref = read.csv("https://www.dropbox.com/s/xtt4emmz6txtbun/fed_agency_capacity_autonomy.csv?dl=1")
-fed = read.csv("https://www.dropbox.com/s/18h5ppnj3srrxbx/r73_13_recoded_flows.csv?dl=1")
+ref = read.csv("fed_agency_capacity_autonomy.csv")
+fed = read.csv("r73_13_recoded_flows.csv")
 
 
 fed = fed %>%
@@ -35,6 +35,12 @@ fed = fed %>%
 
 
 # Introduction
+
+## Background
+
+* In the disaster literature, networks of actors form to address complex problem
+* Prior studies look at the communication networks that form during these events
+* *Capacity*: The resources and professionalization required to accomplish tasks and goals. 
 
 ## Motivation
 
@@ -71,6 +77,10 @@ ggplotly(p) %>%
 ```
 
 # Data
+
+## Source
+
+* Buzzfeed FOAI request
 
 ## Network Visualization 
 
@@ -387,11 +397,6 @@ render.d3movie(sampdyn,
 
 ```
 
-# In the evening
 
-## Dinner
-
-- Eat spaghetti
-- Drink wine
 
 ---
