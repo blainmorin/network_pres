@@ -19,6 +19,8 @@ library(networkD3)
 library(plotly)
 library(readr)
 library(statnet)
+library(ndtv)
+library(latticeExtra)
 
 fed = read.csv("r73_13_recoded_flows.csv")
 ref = read.csv("fed_agency_capacity_autonomy.csv")
@@ -173,68 +175,68 @@ renderForceNetwork({
 
 ```{r}
 
-#### Data Cleaning
-df = fed %>%
-  filter(yr == 1990) %>%
-  filter(n >= 5000) %>%
-  filter(n_nextpct <= .5) 
-
-
-#### Make nodes
-sources = df %>%
-  distinct(AGYSUB) %>%
-  rename(label = AGYSUB)
-
-destinations = df %>%
-  distinct(label = AGYSUB_next)
-
-nodes = full_join(sources, destinations, by = "label")
-
-nodes = nodes %>%
-  rowid_to_column("id")
-
-#### Add covariates to nodes
-
-ref2 = ref %>%
-  filter(yr == 1990) %>%
-  select(AGYSUB, n, agy_typ, med_sal_)
-
-nodes = nodes %>%
-  left_join(ref2, by = c("label" = "AGYSUB")) %>%
-  drop_na()
-
-#### Make edges
-
-agy_set = expand.grid(unique(df$AGYSUB), unique(df$AGYSUB_next))
-
-agy_set = agy_set %>%
-  filter(as.character(Var1) != as.character(Var2)) %>%
-  rename(AGYSUB = Var1, AGYSUB_next = Var2)
-
-df2 = agy_set %>%
-  left_join(df) %>%
-  mutate(connected = ifelse(n_next > 0, 1, 0)) 
-
-df2$connected = replace_na(df2$connected, 0)
-
-df2 = df2 %>%
-  select(AGYSUB, AGYSUB_next, connected)
-
-df2 = df2 %>%
-  left_join(nodes, by = c("AGYSUB" = "label")) %>%
-  rename(from = id)
-
-df2 = df2 %>%
-  left_join(nodes, by = c("AGYSUB_next" = "label")) %>%
-  rename(to = id)
-
-df2 = df2 %>%
-  filter(from != to) %>%
-  filter(connected == 1)
-
-#### Make network
-
-fednetwork = network(df2, vertex.attr = nodes, matrix.type = "edgelist")
+# #### Data Cleaning
+# df = fed %>%
+#   filter(yr == 1990) %>%
+#   filter(n >= 5000) %>%
+#   filter(n_nextpct <= .5) 
+# 
+# 
+# #### Make nodes
+# sources = df %>%
+#   distinct(AGYSUB) %>%
+#   rename(label = AGYSUB)
+# 
+# destinations = df %>%
+#   distinct(label = AGYSUB_next)
+# 
+# nodes = full_join(sources, destinations, by = "label")
+# 
+# nodes = nodes %>%
+#   rowid_to_column("id")
+# 
+# #### Add covariates to nodes
+# 
+# ref2 = ref %>%
+#   filter(yr == 1990) %>%
+#   select(AGYSUB, n, agy_typ, med_sal_)
+# 
+# nodes = nodes %>%
+#   left_join(ref2, by = c("label" = "AGYSUB")) %>%
+#   drop_na()
+# 
+# #### Make edges
+# 
+# agy_set = expand.grid(unique(df$AGYSUB), unique(df$AGYSUB_next))
+# 
+# agy_set = agy_set %>%
+#   filter(as.character(Var1) != as.character(Var2)) %>%
+#   rename(AGYSUB = Var1, AGYSUB_next = Var2)
+# 
+# df2 = agy_set %>%
+#   left_join(df) %>%
+#   mutate(connected = ifelse(n_next > 0, 1, 0)) 
+# 
+# df2$connected = replace_na(df2$connected, 0)
+# 
+# df2 = df2 %>%
+#   select(AGYSUB, AGYSUB_next, connected)
+# 
+# df2 = df2 %>%
+#   left_join(nodes, by = c("AGYSUB" = "label")) %>%
+#   rename(from = id)
+# 
+# df2 = df2 %>%
+#   left_join(nodes, by = c("AGYSUB_next" = "label")) %>%
+#   rename(to = id)
+# 
+# df2 = df2 %>%
+#   filter(from != to) %>%
+#   filter(connected == 1)
+# 
+# #### Make network
+# 
+# fednetwork = network(df2, vertex.attr = nodes, matrix.type = "edgelist")
 
 ```
 
@@ -242,17 +244,17 @@ fednetwork = network(df2, vertex.attr = nodes, matrix.type = "edgelist")
 
 ```{r, echo = TRUE}
 
-set.seed(442210)
-
-model1 = ergm(fednetwork ~ edges + nodecov("med_sal_") + 
-                nodematch("agy_typ") +
-                nodecov("n") +
-                mutual + gwidegree(2), 
-             control=control.ergm(
-               MCMC.samplesize=20000,
-               MCMC.burnin=500000,
-               MCMLE.maxit=10,
-               parallel = 4))
+# set.seed(442210)
+# 
+# model1 = ergm(fednetwork ~ edges + nodecov("med_sal_") + 
+#                 nodematch("agy_typ") +
+#                 nodecov("n") +
+#                 mutual + gwidegree(2), 
+#              control=control.ergm(
+#                MCMC.samplesize=20000,
+#                MCMC.burnin=500000,
+#                MCMLE.maxit=10,
+#                parallel = 4))
 
 ```
 
@@ -260,10 +262,10 @@ model1 = ergm(fednetwork ~ edges + nodecov("med_sal_") +
 
 ```{r}
 
-gof1 = gof(model1)
-
-par(mfrow=c(3,2))
-plot(gof1)
+# gof1 = gof(model1)
+# 
+# par(mfrow=c(3,2))
+# plot(gof1)
 
 
 ```
@@ -272,14 +274,110 @@ plot(gof1)
 
 ```{r, results='hide'}
 
-mcmc.diagnostics(model1)
+# mcmc.diagnostics(model1)
 
 ```
 
-## Rando
+## TERGM
 
-- Eat eggs
-- Drink coffee
+```{r}
+
+
+years = seq(1974, 2012, by = 1)
+
+nets = list()
+
+df = fed %>%
+  filter(n >= 5000) %>%
+  filter(n <= 20000) %>%
+  filter(n_nextpct <= .5)
+
+sources = df %>%
+  distinct(NAME) %>%
+  rename(label = NAME)
+
+destinations = df %>%
+  distinct(label = NAME_next)
+
+nodes = full_join(sources, destinations, by = "label")
+
+nodes = nodes %>%
+  rowid_to_column("id")
+
+#######################################################
+
+for (i in 1:length(years)) {
+  
+  df = fed %>%
+    filter(yr == years[i]) %>%
+    filter(n >= 5000) %>%
+    filter(n <= 20000) %>%
+    filter(n_nextpct <= .5)
+  
+  #### Add covariates to nodes
+  
+  ref2 = ref %>%
+    filter(yr == years[i]) %>%
+    select(n, agy_typ, med_sal_, agy_full) %>%
+    mutate(agy_full = toupper(agy_full))
+  
+  nodestemp = nodes %>%
+    left_join(ref2, by = c("label" = "agy_full")) %>%
+    drop_na()
+  
+  #### Make edges
+  
+  agy_set = expand.grid(unique(df$NAME), unique(df$NAME_next))
+  
+  agy_set = agy_set %>%
+    filter(as.character(Var1) != as.character(Var2)) %>%
+    rename(NAME = Var1, NAME_next = Var2)
+  
+  df2 = agy_set %>%
+    left_join(df) %>%
+    mutate(connected = ifelse(n_next > 10, 1, 0)) 
+  
+  df2$connected = replace_na(df2$connected, 0)
+  
+  df2 = df2 %>%
+    select(NAME, NAME_next, connected)
+  
+  df2 = df2 %>%
+    left_join(nodestemp, by = c("NAME" = "label")) %>%
+    rename(from = id)
+  
+  df2 = df2 %>%
+    left_join(nodestemp, by = c("NAME_next" = "label")) %>%
+    rename(to = id)
+  
+  df2 = df2 %>%
+    filter(from != to) %>%
+    filter(connected == 1)
+  
+  #### Make network
+  
+  temp = network(df2, vertex.attr = nodestemp, matrix.type = "edgelist")
+  nets[[i]] = temp
+  
+  
+}
+
+sampdyn = networkDynamic(network.list = nets, vertex.pid = "vertex.names")
+
+render.d3movie(sampdyn, 
+               plot.par=list(displaylabels=T), 
+               label = network.vertex.names(sampdyn), 
+               render.par=list(tween.frames=10,
+                               show.time=TRUE,
+                               show.stats= "~edges+triangles",
+                               extraPlotCmds=NULL,
+                               initial.coords=0),
+               d3.options = list(animateOnLoad = TRUE, animationDuration = 3000,
+                                 durationControl=TRUE))
+
+
+
+```
 
 # In the evening
 

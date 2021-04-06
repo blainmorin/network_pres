@@ -16,7 +16,7 @@ fed = fed %>%
   filter(AGYSUB_next != "UKNOWN")
 
 
-years = seq(1974, 2013, by = 1)
+years = seq(1974, 2012, by = 1)
 
 nets = list()
 
