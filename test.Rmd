@@ -1,0 +1,168 @@
+---
+title: "Federal Employment Network"
+author: "Blain Morin"
+date: "4/7/2021"
+runtime: shiny
+output: 
+    ioslides_presentation:
+        widescreen: true
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+library(shiny)
+library(readr)
+library(tidyverse)
+library(networkD3)
+library(plotly)
+
+fed = read.csv("https://www.dropbox.com/s/18h5ppnj3srrxbx/r73_13_recoded_flows.csv?dl=1")
+
+
+
+```
+
+
+# Introduction
+
+## Motivation
+
+```{r}
+
+test = fed %>%
+  filter(AGYSUB_next != "EXIT")
+
+test = test %>%
+  filter(AGYSUB == "EP00" | AGYSUB_next == "EP00")
+
+test2 = test %>%
+  group_by(yr) %>%
+  summarize(Sent = sum(AGYSUB == "EP00"), Received = sum(AGYSUB_next == "EP00"))
+
+test2 = test2 %>%
+  gather(key = Measure, value = Edge, 2:3)
+
+
+p = test2 %>%
+  ggplot(aes(x = yr, y = Edge)) +
+  geom_line(aes(group = Measure, color = Measure), size = 1.5) +
+  ylab("Number of Employees") +
+  xlab("Year") +
+  ggtitle("Environmental Protection Agency: Employees Sent and Received") +
+  theme_bw() +
+  scale_color_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = c(1973, seq(1975, 2010, by = 5,), 2012), minor_breaks = 1973:2012) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  
+ggplotly(p) %>%
+    config(displayModeBar = FALSE)
+
+```
+
+# Data
+
+## Network Visualization 
+
+```{r}
+
+fluidRow(
+        column(3,
+            sliderInput("year",
+                        "Year:",
+                        ticks = FALSE,
+                        min = 1973,
+                        max = 2012,
+                        value = 1990)),
+        column(3,    
+            sliderInput("nmin",
+                         "Min Agency Size:",
+                        min = 1, max = max(fed$n),
+                        value = 20000)),
+        column(2,    
+               numericInput("send",
+                           "Min. Sent:",
+                           min = 1, max = 2000,
+                           value = 10, step = 5)),
+            
+        column(2,    
+            submitButton("Apply", icon("refresh")))
+    )
+
+```
+
+```{r}
+
+renderForceNetwork({
+        # generate bins based on input$bins from ui.R
+        df = fed %>%
+            filter(yr == input$year) %>%
+            filter(n >= input$nmin) %>%
+            filter(n_next >= input$send[1], n_next <= 2000)
+        
+        sources = df %>%
+            distinct(AGYSUB) %>%
+            rename(label = AGYSUB)
+        
+        destinations = df %>%
+            distinct(AGYSUB_next) %>%
+            rename(label = AGYSUB_next)
+        
+        nodes = full_join(sources, destinations, by = "label") %>%
+            rowid_to_column("id")
+        
+        edges = df %>%
+            select(AGYSUB, AGYSUB_next, n_next) %>%
+            rename(from = AGYSUB, to = AGYSUB_next, weight = n_next)
+        
+        nodes_d3 = mutate(nodes, id = id - 1) 
+        
+        nodevars = fed %>%
+            group_by(AGYSUB) %>%
+            slice(1) %>%
+            select(AGYSUB, n, NAME)
+        
+        nodes_d3 = nodes_d3 %>%
+            left_join(nodevars, by = c("label" = "AGYSUB")) 
+        
+        nodes_d3$n = nodes_d3$n %>% replace_na(500)
+        
+        nodes_d3[nodes_d3$label == "EXIT", "NAME"] = "EXIT" 
+        
+        nodes_d3$NAME = nodes_d3$NAME %>% replace_na("UNKNOWN")
+        
+        nodes_d3 = nodes_d3 %>%
+            mutate(logn = sqrt(n))
+        
+        edges = left_join(edges, nodes, by = c("from" = "label")) %>%
+            rename(fromid = id) %>%
+            left_join(nodes, by = c("to" = "label")) %>%
+            rename(toid = id) %>%
+            select(fromid, toid, weight) %>%
+            mutate(weight10 = sqrt(weight))
+        
+        edges_d3 = mutate(edges, fromid = fromid - 1, toid = toid - 1) 
+        
+        
+        forceNetwork(Links = edges_d3, Nodes = nodes_d3, Source = "fromid", Target = "toid", 
+                     NodeID = "NAME", Group = "id", Value = "weight10", 
+                     opacity = 1, fontSize = 16, zoom = FALSE, Nodesize = "logn",
+                     linkDistance = 100, height = 1000, arrows = TRUE)
+    })
+
+```
+
+## Breakfast
+
+- Eat eggs
+- Drink coffee
+
+# In the evening
+
+## Dinner
+
+- Eat spaghetti
+- Drink wine
+
+---
