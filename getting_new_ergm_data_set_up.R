@@ -79,11 +79,11 @@ nodes = nodes %>%
 #######################
 
 
-agy_set = expand.grid(unique(df$AGYSUB), unique(df$AGYSUB_next))
+agy_set = expand.grid(unique(df$NAME), unique(df$NAME_next))
 
 agy_set = agy_set %>%
   filter(as.character(Var1) != as.character(Var2)) %>%
-  rename(AGYSUB = Var1, AGYSUB_next = Var2)
+  rename(NAME = Var1, NAME_next = Var2)
 
 df2 = agy_set %>%
   left_join(df) %>%
@@ -92,12 +92,13 @@ df2 = agy_set %>%
 df2$connected = replace_na(df2$connected, 0)
 
 df2 = df2 %>%
-  select(AGYSUB, AGYSUB_next, connected) %>%
+  select(NAME, NAME_next, connected) %>%
   filter(connected == 1) %>%
-  filter(AGYSUB %in% nodes$AGYSUB & AGYSUB_next %in% nodes$AGYSUB)
+  filter(NAME %in% toupper(nodes$agy_full) & NAME_next %in% toupper(nodes$agy_full))
 
 #### Make network
 
 fednetwork = network(df2, vertex.attr = nodes, matrix.type = "edgelist")
 
+plot(fednetwork)
 
