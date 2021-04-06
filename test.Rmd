@@ -20,7 +20,9 @@ library(plotly)
 
 fed = read.csv("https://www.dropbox.com/s/18h5ppnj3srrxbx/r73_13_recoded_flows.csv?dl=1")
 
-
+fed = fed %>%
+    filter(AGYSUB_next != "EXIT") %>%
+    filter(AGYSUB_next != "UKNOWN")
 
 ```
 
@@ -53,7 +55,7 @@ p = test2 %>%
   ggtitle("Environmental Protection Agency: Employees Sent and Received") +
   theme_bw() +
   scale_color_brewer(type = "qual", palette = 2) +
-  scale_x_continuous(breaks = c(1973, seq(1975, 2010, by = 5,), 2012), minor_breaks = 1973:2012) +
+  scale_x_continuous(breaks = c(1973, seq(1976, 2010, by = 4,), 2012), minor_breaks = 1973:2012) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
   
 ggplotly(p) %>%
@@ -87,7 +89,7 @@ fluidRow(
                            value = 10, step = 5)),
             
         column(2,    
-            submitButton("Apply", icon("refresh")))
+            checkboxInput("EPA", "EPA", value = TRUE))
     )
 
 ```
