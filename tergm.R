@@ -1,5 +1,3 @@
-
-
 library(shiny)
 library(readr)
 library(tidyverse)
@@ -18,7 +16,7 @@ fed = fed %>%
   filter(AGYSUB_next != "UKNOWN")
 
 
-years = seq(1980, 2000, by = 5)
+years = seq(1974, 2013, by = 1)
 
 nets = list()
 
@@ -101,10 +99,11 @@ sampdyn = networkDynamic(network.list = nets, vertex.pid = "vertex.names")
 
 render.d3movie(sampdyn, 
                plot.par=list(displaylabels=T), 
-               label = network.vertex.names(sampdyn))
-
-
-
-
-
-
+               label = network.vertex.names(sampdyn), 
+               render.par=list(tween.frames=10,
+                               show.time=TRUE,
+                               show.stats= "~edges+triangles",
+                               extraPlotCmds=NULL,
+                               initial.coords=0),
+               d3.options = list(animateOnLoad = TRUE, animationDuration = 3000,
+                                 durationControl=TRUE))
