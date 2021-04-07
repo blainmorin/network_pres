@@ -10,6 +10,7 @@ output:
       highlightStyle: github
       highlightLines: true
       countIncrementalSlides: false
+
 ---
 
 # Background
@@ -27,6 +28,8 @@ library(tidyverse)
 library(networkD3)
 library(plotly)
 library(readr)
+library(knitr)
+library(kableExtra)
 library(statnet)
 library(ndtv)
 library(latticeExtra)
@@ -41,7 +44,7 @@ fed = fed %>%
 
 ```
 
-* Interested in a descriptive historical of the capacity of environmental agencies.
+* Interested in a descriptive historical account of the capacity of environmental agencies.
 
 * *Capacity*: The resources and professionalization required to accomplish tasks and goals. 
 
@@ -55,7 +58,9 @@ fed = fed %>%
 
 ???
 
-This project is sort of an offshoot of one that I'm working on with Professor Rea at Glenn where I'm doing sort of an analysis of capacity of federal agencies as a latent variable. By capacity, we are talking about an agency's ability to take actions that further their mission. The thought is that agencies with things like more employees, higher wages, longer lengths of service etc. will be more able to accomplish things. One possibly related phenomenon is the notion of brain drain where highly skilled workers may get pulled away from certain agencies during certain periods of time.   
+- Hi, Good morning everyone. I'm going to present some of the work I;ve been doing on this analysis of the network of federal employees. 
+
+- This project is sort of an offshoot of one that I'm working on with Professor Rea here at Glenn where I'm doing  an analysis of the potential capacity of federal agencies as a latent or unobserved variable. By capacity, we are talking about an agency's ability to take actions that further their mission. Of course, this is something that can't be directly measured, so the thought is that agencies with characteristics like more employees, higher wages, longer lengths of service, more education, etc. will be more able to accomplish stuff that they are supposed to be doing. In other words, these characteristics are expressions of the underlying capacity state. One related phenomenon is the notion of brain drain where highly skilled workers may get pulled away from certain agencies during certain periods of time. So, that is the goal of the investigation here.   
 
 
 ---
@@ -271,15 +276,16 @@ Here is what the test network looks like. As you can see, I've thinned it quite 
 * The network year is 1990
 
 * Test model with just exogenous covariates
-    * *budget_diff*: The proportional increase or decrease in the agency's budget since 1980.
-    * *agy_type*: The agency functional classification (for example EPA type = "Environment and Natural Resources")
-    * *med_sal*: The median salary at an agency
+    * **budget_diff**: The proportional increase or decrease in the agency's budget since 1980.
+    * **agy_type**: The agency functional classification (for example EPA type = "Environment and Natural Resources")
+    * **med_sal**: The median salary at an agency
 
 ```{r, echo = TRUE}
 
 set.seed(442210)
 model1 = ergm(fednetwork ~ edges + 
                 nodeicov("budget_diff") + 
+                absdiff("ma_diff") +
                 nodematch("agy_typ") + 
                 absdiff("med_sal_"), 
              control=control.ergm(
@@ -293,213 +299,101 @@ model1 = ergm(fednetwork ~ edges +
 ---
 # Exogenous Results
 
+```{r}
 
+check = summary(model1)
 
----
+check2 = round(check$coefficients, 2) %>%
+  mutate(expCoef = round(exp(Estimate), 2)) %>%
+  relocate(expCoef, .after = Estimate) %>%
+  mutate(Name = rownames(check$coefficients)) %>%
+  relocate(Name)
 
-Install the **xaringan** package from [Github](https://github.com/yihui/xaringan):
-
-```{r eval=FALSE, tidy=FALSE}
-remotes::install_github("yihui/xaringan")
-```
-
---
-
-You are recommended to use the [RStudio IDE](https://www.rstudio.com/products/rstudio/), but you do not have to.
-
-- Create a new R Markdown document from the menu `File -> New File -> R Markdown -> From Template -> Ninja Presentation`;<sup>1</sup>
-
---
-
-- Click the `Knit` button to compile it;
-
---
-
-- or use the [RStudio Addin](https://rstudio.github.io/rstudioaddins/)<sup>2</sup> "Infinite Moon Reader" to live preview the slides (every time you update and save the Rmd document, the slides will be automatically reloaded in RStudio Viewer.
-
-
-
----
-background-image: url(`r xaringan:::karl`)
-background-position: 50% 50%
-class: center, bottom, inverse
-
-# You only live once!
-
----
-
-# Hello Ninja
-
-As a presentation ninja, you certainly should not be satisfied by the "Hello World" example. You need to understand more about two things:
-
-1. The [remark.js](https://remarkjs.com) library;
-
-1. The **xaringan** package;
-
-Basically **xaringan** injected the chakra of R Markdown (minus Pandoc) into **remark.js**. The slides are rendered by remark.js in the web browser, and the Markdown source needed by remark.js is generated from R Markdown (**knitr**).
-
----
-
-# remark.js
-
-You can see an introduction of remark.js from [its homepage](https://remarkjs.com). You should read the [remark.js Wiki](https://github.com/gnab/remark/wiki) at least once to know how to
-
-- create a new slide (Markdown syntax<sup>*</sup> and slide properties);
-
-- format a slide (e.g. text alignment);
-
-- configure the slideshow;
-
-- and use the presentation (keyboard shortcuts).
-
-It is important to be familiar with remark.js before you can understand the options in **xaringan**.
-
-.footnote[[*] It is different with Pandoc's Markdown! It is limited but should be enough for presentation purposes. Come on... You do not need a slide for the Table of Contents! Well, the Markdown support in remark.js [may be improved](https://github.com/gnab/remark/issues/142) in the future.]
-
----
-background-image: url(`r xaringan:::karl`)
-background-size: cover
-class: center, bottom, inverse
-
-# I was so happy to have discovered remark.js!
-
----
-class: inverse, middle, center
-
-# Using xaringan
-
----
-
-# xaringan
-
-Provides an R Markdown output format `xaringan::moon_reader` as a wrapper for remark.js, and you can use it in the YAML metadata, e.g.
-
-```yaml
----
-title: "A Cool Presentation"
-output:
-  xaringan::moon_reader:
-    yolo: true
-    nature:
-      autoplay: 30000
----
-```
-
-See the help page `?xaringan::moon_reader` for all possible options that you can use.
-
----
-
-# remark.js vs xaringan
-
-Some differences between using remark.js (left) and using **xaringan** (right):
-
-.pull-left[
-1. Start with a boilerplate HTML file;
-
-1. Plain Markdown;
-
-1. Write JavaScript to autoplay slides;
-
-1. Manually configure MathJax;
-
-1. Highlight code with `*`;
-
-1. Edit Markdown source and refresh browser to see updated slides;
-]
-
-.pull-right[
-1. Start with an R Markdown document;
-
-1. R Markdown (can embed R/other code chunks);
-
-1. Provide an option `autoplay`;
-
-1. MathJax just works;<sup>*</sup>
-
-1. Highlight code with `{{}}`;
-
-1. The RStudio addin "Infinite Moon Reader" automatically refreshes slides on changes;
-]
-
-.footnote[[*] Not really. See next page.]
-
----
-
-# Math Expressions
-
-You can write LaTeX math expressions inside a pair of dollar signs, e.g. &#36;\alpha+\beta$ renders $\alpha+\beta$. You can use the display style with double dollar signs:
+ check2 %>%
+  kbl(caption = "Exogenous Coefficients") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
 
 ```
-$$\bar{X}=\frac{1}{n}\sum_{i=1}^nX_i$$
-```
 
-$$\bar{X}=\frac{1}{n}\sum_{i=1}^nX_i$$
+* Coefficient on budget_diff: $exp(.76) = 2.14$ 
+    * A 100% increase in budget doubles the odds of receiving at least 5% of another agency's employees.
 
-Limitations:
+???
 
-1. The source code of a LaTeX math expression must be in one line, unless it is inside a pair of double dollar signs, in which case the starting `$$` must appear in the very beginning of a line, followed immediately by a non-space character, and the ending `$$` must be at the end of a line, led by a non-space character;
-
-1. There should not be spaces after the opening `$` or before the closing `$`.
-
-1. Math does not work on the title slide (see [#61](https://github.com/yihui/xaringan/issues/61) for a workaround).
 
 ---
+# Add endogenous effects
 
-# R Code
+* *Mutuality*: If an employee's skill set works at another agency, it may be more likely that there are interchangeable roles. 
 
-```{r comment='#'}
-# a boring regression
-fit = lm(dist ~ 1 + speed, data = cars)
-coef(summary(fit))
-dojutsu = c('地爆天星', '天照', '加具土命', '神威', '須佐能乎', '無限月読')
-grep('天', dojutsu, value = TRUE)
+```{r, echo = TRUE}
+
+set.seed(442210)
+model2 = ergm(fednetwork ~ edges + 
+                nodeicov("budget_diff") + 
+                absdiff("ma_diff") +
+                nodematch("agy_typ") + 
+                absdiff("med_sal_") +
+                mutual() +
+                gwidegree(2, cutoff = 10), 
+             control=control.ergm(
+               MCMC.samplesize=20000,
+               MCMC.burnin=50000,
+               MCMLE.maxit=10,
+               parallel = 4))
+
 ```
 
 ---
-
-# R Plots
-
-```{r cars, fig.height=4, dev='svg'}
-par(mar = c(4, 4, 1, .1))
-plot(cars, pch = 19, col = 'darkgray', las = 1)
-abline(fit, lwd = 2)
-```
-
----
-
-# Tables
-
-If you want to generate a table, make sure it is in the HTML format (instead of Markdown or other formats), e.g.,
+# Endogenous Results
 
 ```{r}
-knitr::kable(head(iris), format = 'html')
+
+check = summary(model2)
+
+check2 = round(check$coefficients, 2) %>%
+  mutate(expCoef = round(exp(Estimate), 2)) %>%
+  relocate(expCoef, .after = Estimate) %>%
+  mutate(Name = rownames(check$coefficients)) %>%
+  relocate(Name)
+
+ check2 %>%
+  kbl(caption = "Exogenous Coefficients") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
 ```
 
 ---
+# Diagnostic Plots
 
-# HTML Widgets
+```{r, fig.height=6}
 
-I have not thoroughly tested HTML widgets against **xaringan**. Some may work well, and some may not. It is a little tricky.
+gof2 = gof(model2)
 
-Similarly, the Shiny mode (`runtime: shiny`) does not work. I might get these issues fixed in the future, but these are not of high priority to me. I never turn my presentation into a Shiny app. When I need to demonstrate more complicated examples, I just launch them separately. It is convenient to share slides with other people when they are plain HTML/JS applications.
+par(mfrow=c(3,2))
+plot(gof2)
 
-See the next page for two HTML widgets.
-
----
-
-```{r out.width='100%', fig.height=6, eval=require('leaflet')}
-library(leaflet)
-leaflet() %>% addTiles() %>% setView(-93.65, 42.0285, zoom = 17)
 ```
 
 ---
+# Even more diagnostics
 
-```{r eval=require('DT'), tidy=FALSE}
-DT::datatable(
-  head(iris, 10),
-  fillContainer = FALSE, options = list(pageLength = 8)
-)
-```
+.center[
+<img src="chain.png" style="width: 100%"/>
+]
 
 ---
+
+# Even more diagnostics (part2)
+
+.center[
+<img src="chain2.png" style="width: 100%"/>
+]
+
+---
+
+
+
+
+
 
