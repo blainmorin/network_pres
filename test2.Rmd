@@ -11,8 +11,8 @@ output:
       highlightLines: true
       countIncrementalSlides: false
 ---
-# Background
 
+# Background
 
 
 ```{r setup, include=FALSE}
@@ -49,25 +49,87 @@ fed = fed %>%
 
 * *Brain Drain*: Highly skilled workers leaving one agency for others
 
-<img src="drain.png" style="width: 30%" />
-
+.center[
+<img src="drain.png" style="width: 30%"/>
+]
 
 ???
 
-This project is sort of an offshoot of one that I'm working on with Professor Rea at Glenn where I'm doing sort of an analysis of capacity of federal agencies as a latent variable. By capacity, we are talking about an agency's ability to take actions that further their mission. The thought is that agencies with things like more employees, higher wages, longer lengths of service etc. will be more able to accomplish things. One possibly related phenomenon is the notion of brain drain  
+This project is sort of an offshoot of one that I'm working on with Professor Rea at Glenn where I'm doing sort of an analysis of capacity of federal agencies as a latent variable. By capacity, we are talking about an agency's ability to take actions that further their mission. The thought is that agencies with things like more employees, higher wages, longer lengths of service etc. will be more able to accomplish things. One possibly related phenomenon is the notion of brain drain where highly skilled workers may get pulled away from certain agencies during certain periods of time.   
 
 
 ---
-class: center, middle
 
-# xaringan
+# Data
 
-### /ʃaː.'riŋ.ɡan/
+* Come from a Buzzfeed News Freedom of Information Act (FOAI) request
+   * Four Decades of payroll data from The U.S. Office of Personnel Management
+   * From 1973 to 2013, the data are uniquely identified. This allows us to track their migrations into, out of, and through federal agencies.
+   
+.center[
+<img src="buzz.png" style="width: 60%"/>
+]
+
+???
+
+It's kind of weird but the data come from Buzzfeed News who obtained it through a FOAI request. They released it publicly in 2017. It contains four decades worth of payroll data from the US Office of Personnel Management and is about 30gigs in size. The first thirty years have unique identifiers, so it's possible to track employees flowing in and out and between agencies. If we look just at the EPA.
+
 
 ---
-class: inverse, center, middle
 
-# Get Started
+# EPA Example
+
+```{r, fig.width=10}
+
+test = fed %>%
+  filter(AGYSUB_next != "EXIT")
+
+test = test %>%
+  filter(AGYSUB == "EP00" | AGYSUB_next == "EP00")
+
+test2 = test %>%
+  group_by(yr) %>%
+  summarize(Sent = sum(AGYSUB == "EP00"), Received = sum(AGYSUB_next == "EP00"))
+
+test2 = test2 %>%
+  gather(key = Measure, value = Edge, 2:3)
+
+
+p = test2 %>%
+  ggplot(aes(x = yr, y = Edge)) +
+  geom_line(aes(group = Measure, color = Measure), size = 1.5) +
+  ylab("Number of Employees") +
+  xlab("Year") +
+  theme_bw() +
+  scale_color_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = c(1973, seq(1976, 2010, by = 4,), 2012), minor_breaks = 1973:2012) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  
+ggplotly(p) %>%
+    config(displayModeBar = FALSE)
+
+```
+
+???
+
+So here we're looking at the employees that either left another agency to work at the EPA or left the EPA to work at another agency. There's not a real clear cut pattern, but we see there is a period from around 1982 to 1994 where the EPA was receiving more employees from other agencies than it was giving up. These years, they are a sort of people absorbing sponge soaking up employees. But, we don;t know from this graph what types of employees are moving in and out. In terms of scale, the EPA averaged around 11,000 employees during this period. So, 100 employees is like 9%.   
+
+---
+
+<style>
+    #frame {
+        border: 3px dotted;
+        width: 1400px;
+        height: 900px;
+        zoom: .75;
+    }
+</style>
+
+<iframe src="https://blainster.shinyapps.io/FedNet/" id="frame" </iframe>
+
+???
+
+So here's a familiar looking thing. 
 
 ---
 

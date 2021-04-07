@@ -1,5 +1,5 @@
 ---
-title: "Federal Employment Network"
+title: "Brain Drain Federal Employment Network"
 author: "Blain Morin"
 date: "4/7/2021"
 runtime: shiny
@@ -37,18 +37,15 @@ fed = fed %>%
 
 # Introduction 
 
-![](drain.png)
-
 ## Background 
 
 * Interested in a descriptive historical of the capacity of environmental agencies 
 * *Capacity*: The resources and professionalization required to accomplish tasks and goals. 
 
 <div class="notes">
-This is my *note*.
 
-- It can contain markdown
-- like this list
+This project is sort of a offshot of a project that I'm working on with Chris Rea 
+
 </div>
 
 ## Motivation
