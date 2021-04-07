@@ -58,7 +58,7 @@ fed = fed %>%
 
 ???
 
-- Hi, Good morning everyone. I'm going to present some of the work I;ve been doing on this analysis of the network of federal employees. 
+- Hi, Good morning everyone. I'm going to present some of the work I've been doing on this analysis of the network of federal employees. 
 
 - This project is sort of an offshoot of one that I'm working on with Professor Rea here at Glenn where I'm doing  an analysis of the potential capacity of federal agencies as a latent or unobserved variable. By capacity, we are talking about an agency's ability to take actions that further their mission. Of course, this is something that can't be directly measured, so the thought is that agencies with characteristics like more employees, higher wages, longer lengths of service, more education, etc. will be more able to accomplish stuff that they are supposed to be doing. In other words, these characteristics are expressions of the underlying capacity state. One related phenomenon is the notion of brain drain where highly skilled workers may get pulled away from certain agencies during certain periods of time. So, that is the goal of the investigation here.   
 
