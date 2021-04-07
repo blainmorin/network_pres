@@ -334,8 +334,7 @@ model2 = ergm(fednetwork ~ edges +
                 absdiff("ma_diff") +
                 nodematch("agy_typ") + 
                 absdiff("med_sal_") +
-                mutual() +
-                gwidegree(2, cutoff = 10), 
+                mutual(), 
              control=control.ergm(
                MCMC.samplesize=20000,
                MCMC.burnin=50000,
@@ -391,6 +390,14 @@ plot(gof2)
 ]
 
 ---
+# Model Selection
+
+```{r}
+
+kbl(AIC(model1, model2), booktabs = T, caption = "Compare AICs") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
+```
 
 
 
