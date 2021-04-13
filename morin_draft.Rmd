@@ -324,6 +324,8 @@ model2 = ergm(fednetwork ~ edges +
 
 check = summary(model2)
 
+check$coefficients[[1]][5] = check$coefficients[[1]][5] * 10000
+
 check2 = round(check$coefficients, 2) %>%
   mutate(expCoef = round(exp(Estimate), 2)) %>%
   relocate(expCoef, .after = Estimate) %>%
@@ -331,9 +333,16 @@ check2 = round(check$coefficients, 2) %>%
   relocate(Name)
 
  check2 %>%
-  kbl(caption = "Logit Model", booktabs = T, linesep = "") %>%
+  kbl(caption = "ERGM Model", booktabs = T, linesep = "") %>%
    kable_styling(latex_options = c("striped", "hold_position"))
 
 ```
 
+The z values are suspiciously high. I need to figure out what is going on here.
+
 # References
+
+<div id="refs"></div>
+
+# (APPENDIX) Appendix {-} 
+
