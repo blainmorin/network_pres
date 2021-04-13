@@ -134,7 +134,7 @@ grid.arrange(a, b, nrow = 1)
 
 For exploratory purposes, I compare the proportion of employees that left another agency to work for Environmental Protection Agency (EPA) and the Federal Student Aid Agency (FSA) as well the proportion of employees that left the agencies to work elsewhere in the federal government (See Figure 1). In proportion terms, the proportion that left the EPA are somewhat small. For example, in 2012, 48 employees left the EPA to work at another agency which is relatively low compared to the 18,045 employees that were on the payroll that year. Moreover, there are distinctly different patterns. There is a small period between 1984 and 1990 where the EPA was absorbing more employees than it was losing. In contrast, FSA consistently absorbed employees for most of the years. 
 
-```{r}
+```{r, fig.height=6, fig.cap = "Thinned Binary Directed Network"}
 
 ########### Data Cleaning
 
@@ -209,7 +209,7 @@ agy_set = agy_set %>%
 
 df2 = agy_set %>%
   left_join(df) %>%
-  mutate(connected = ifelse(n_nextpct >= .05, 1, 0))
+  mutate(connected = ifelse(n_nextpct >= .02, 1, 0))
 
 df2$connected = replace_na(df2$connected, 0)
 
@@ -229,6 +229,7 @@ library(igraph)
 library(tidygraph)
 library(ggraph)
 
+
 nodes = nodes %>%
   relocate(AGYSUB)
 
@@ -236,10 +237,102 @@ net = graph.data.frame(d = df2, vertices = nodes, directed = TRUE)
 net.tidy = as_tbl_graph(net)
 
 ggraph(net.tidy) + 
-  geom_edge_link(color = "grey", alpha = .6) + 
-  geom_node_point(aes(color = agy_typ, size = log(n))) +
-  theme_graph() +
-  scale_size(guide = "none") 
+  geom_edge_link( alpha = .3, width = 1, color = "grey")+ 
+  geom_node_point(aes(color = agy_typ, size = n), alpha = .8) +
+  theme_void() +
+  labs(color = "Agency Type") +
+  theme(legend.position="bottom") +
+  guides(color = guide_legend(ncol=2, byrow=FALSE)) +
+  scale_size(guide = "none") +
+  scale_size_continuous(range = c(4, 20), guide = "none") +
+  geom_node_text(aes(label = agy_full), repel=TRUE, size = 1.7)
+  
+  
+
+```
+
+Using the Buzzfeed data, I construct a an employment network that shows the flow between agencies. In Figure 2, I present thinned network where the different Agencies are the nodes and the edges represent an instance where more than 2\% of an agencies employees left to another between the years 1980 and 1990. These edges are binary and are limited to agencies with greater than 5,000 employees. These parameters were chosen to simplify the network for preliminary modeling purposes. I chose a 2\% threshold because it seemed to represent a significant flow. 
+
+## Theory and Analysis
+
+To start, I run a simple logit model with only exogenous covariates (which are all node characteristics). The four exogenous covariates are:
+
+* The proportional budget increase of the agency over the last ten years. For example, if an agency's budget grew by 100\% over the past ten year, then this variable is coded as a 1. For this first term, I am expecting that an increase in budget increases the ability of an agency to poach from other agencies. Thus, I expect this variable to be positively correlated with the number of in-edges at an agency.
+
+* The increase in professionalization over the last ten years (indicated by an increase in people with master's degrees or higher). Although the specific educational degree is unknown, I expect that agencies with similar patterns of professionalization would have a similar demand for certain types of jobs. Thus, I expect a positive correlation between educational homophily and edge formation. 
+
+* Agency Type. The agency type is the code used to describe the agency by the U.S. Office of Budget and Management. For example the EPA is coded as an "Environment and Natural Resources Agency." Similar to the homophily in education hypothesis, I expect that matching on agency type will be positively correlated with edge formation.
+
+* Median Salary of the agency. I expect that agencies that pay their employees a higher salary will be better able to poach employees from other agencies. Thus, I expect a positive correlation between salaries and in-edge formation.
+
+```{r}
+
+set.seed(442210)
+model1 = ergm(fednetwork ~ edges + 
+                nodeicov("budget_diff") + 
+                absdiff("ma_diff") +
+                nodematch("agy_typ") + 
+                nodeicov("med_sal_"))
+
+```
+
+```{r}
+
+check = summary(model1)
+
+check$coefficients[[1]][5] = check$coefficients[[1]][5] * 10000 
+
+check2 = round(check$coefficients, 2) %>%
+  mutate(expCoef = round(exp(Estimate), 2)) %>%
+  relocate(expCoef, .after = Estimate) %>%
+  mutate(Name = rownames(check$coefficients)) %>%
+  relocate(Name)
+
+ check2 %>%
+  kbl(caption = "Logit Model", booktabs = T, linesep = "") %>%
+   kable_styling(latex_options = c("striped", "hold_position"))
+
+  
+   
+
+```
+
+As seen in Table 1, there is significant evidence that professionalization homophily is associated with a 4% increase in the odds of an edge forming. Salary is also significantly associated with in-edge formation. The salary units are in \$10,000. Thus, a \$10,000 increase in the median salary of an agency is associated with an 11\% increase in the odds of an in-edge. Budget increases were not significant in in-edge formation, nor was agency type homophily.
+
+Next, I incorporate endogenous dependencies in the model. For now, I include 1 endogenous covaiate:
+
+* Mutuality: Mutuality means that if employees leave one agency to go to another, than it is may be more likely that employees at that receiving agency will leave for the other. This may be true if the mutuality is a signal that the jobs at the agency have similar functions.
+
+```{r}
+
+set.seed(442210)
+model2 = ergm(fednetwork ~ edges + 
+                nodeicov("budget_diff") + 
+                absdiff("ma_diff") +
+                nodematch("agy_typ") + 
+                absdiff("med_sal_") +
+                mutual(), 
+             control=control.ergm(
+               MCMC.samplesize=20000,
+               MCMC.burnin=50000,
+               MCMLE.maxit=10,
+               parallel = 4))
+
+```
+
+```{r}
+
+check = summary(model2)
+
+check2 = round(check$coefficients, 2) %>%
+  mutate(expCoef = round(exp(Estimate), 2)) %>%
+  relocate(expCoef, .after = Estimate) %>%
+  mutate(Name = rownames(check$coefficients)) %>%
+  relocate(Name)
+
+ check2 %>%
+  kbl(caption = "Logit Model", booktabs = T, linesep = "") %>%
+   kable_styling(latex_options = c("striped", "hold_position"))
 
 ```
 
