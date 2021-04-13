@@ -44,6 +44,6 @@ The measurement of this latent capacity is a complicated and debated topic [@fuk
 
 Despite these theoretical challenges, changes in overall staffing is a crude proxy for capacity. All else equal, changing the overall staffing levels at an agency would impact its ability to achieve its ends. This is expected to be a positive correlation: increases in staff is an indication of growing capacity [@bersch]. 
 
-This paper examines the employment flows between federal agencies. When thinking about capacity, absorbing employees from the network represents
+This paper examines the employment flows between federal agencies. When thinking about capacity, absorbing employees from the network represents both an increasing in capacity due to increased employment and a possible marginal benefit of increased institutional awareness. In other words, gaining employees from other agencies increases the informational diversity within the agency 
 
 # References
