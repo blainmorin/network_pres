@@ -60,7 +60,7 @@ fed = fed %>%
 
 - Hi, Good morning everyone. I'm going to present some of the work I've been doing on this analysis of the network of federal employees. 
 
-- This project is sort of an offshoot of one that I'm working on with Professor Rea here at Glenn where I'm doing  an analysis of the potential capacity of federal agencies as a latent or unobserved variable. By capacity, we are talking about an agency's ability to take actions that further their mission. Of course, this is something that can't be directly measured, so the thought is that agencies with characteristics like more employees, higher wages, longer lengths of service, more education, etc. will be more able to accomplish stuff that they are supposed to be doing. In other words, these characteristics are expressions of the underlying capacity state. One related phenomenon is the notion of brain drain where highly skilled workers may get pulled away from certain agencies during certain periods of time. So, that is the goal of the investigation here.   
+- This project is sort of an offshoot of one that I'm working on with Professor Rea here at Glenn where we're analyzing the potential capacity of federal agencies as a latent or unobserved variable. By capacity, we are talking about an agency's ability to take actions that further their mission. Of course, this is something that can't be directly measured, so the thought is that agencies with characteristics like more employees, higher wages, longer lengths of service, more education, etc. will be more able to accomplish stuff that they are supposed to be doing. In other words, these observable characteristics are expressions of the underlying capacity state of an agency. One related phenomenon is the notion of brain drain where highly skilled workers may get pulled away from certain agencies during certain periods of time. So, that is the goal of the investigation here.   
 
 
 ---
@@ -277,6 +277,7 @@ Here is what the test network looks like. As you can see, I've thinned it quite 
 
 * Test model with just exogenous covariates
     * **budget_diff**: The proportional increase or decrease in the agency's budget since 1980.
+    * **ma_diff**: The proportional increase or decrease in the number of employees with a Master's degree or higher since 1980
     * **agy_type**: The agency functional classification (for example EPA type = "Environment and Natural Resources")
     * **med_sal**: The median salary at an agency
 
@@ -287,14 +288,18 @@ model1 = ergm(fednetwork ~ edges +
                 nodeicov("budget_diff") + 
                 absdiff("ma_diff") +
                 nodematch("agy_typ") + 
-                absdiff("med_sal_"), 
-             control=control.ergm(
-               MCMC.samplesize=20000,
-               MCMC.burnin=500000,
-               MCMLE.maxit=10,
-               parallel = 4))
+                absdiff("med_sal_"))
 
 ```
+
+???
+
+So this slice of the data look at 1990. To start I run a simple model with only exogenous covariates. These are all node characteristics. The first two covariates are budget difference and education difference since 1980 (so ten year in the past). For example, if the EPA's budget grew from 100 dollars in 1980 to 200 dollars in 1990, then this budget diff variable is coded as a 1 (i.e. a 100 percent increase). I'm also using the average salary at the agency and the agency type as predictors.
+
+This is how I coded the model. I think this specification is really up for debate, but here was my thought process. For the first term, I'm expecting that as budgets increase, then the amount of in edges increase (more money flowing to the agency means more potential to poach workers). I used the homopholy statistic for the education difference. I was thinking that this would be sort of a proxy for the brain drain. So a large value here could indicate that one agency was gaining professional employees whereas another was losing (but maybe not necessarily so). I'm a little fuzzy on the best way to code that here. 
+
+The other two terms a more straightforward. I'm hypothesizing that the probability of an edge increases if the two agencies are of a similar type. For example, employees at a health agency would be more likely to go to another health agency rather than say a defence agency. I also thought that differences in wages between agencies would affect edge formation. If one agency pays more than the other, then there might be a higher chance that employees will be motivated to move. 
+
 
 ---
 # Exogenous Results
@@ -320,6 +325,13 @@ check2 = round(check$coefficients, 2) %>%
 
 ???
 
+Here are the results. Ignoring the intercept, we see that first two covariates are significant. The budget difference is in the expected direction. Exponentiating the coefficient, we get 2.14, meaning that a 100 percent increase in budget doubles the odds of receiving at least 5 percent of another agency's employees. 
+
+The difference in master's degree growth doesn't capture really a brain-drain. Differences in master's degree growth are associated with a decrease in the odds of master's formation. In fact this is maybe interpreted kind of opposite of a brain-drain, in that agencies with similar needs for specialized degrees are more likely to exchange employees.
+
+The other two coefficients are not significant, which I find a bit surprising.
+
+
 
 ---
 # Add endogenous effects
@@ -343,6 +355,11 @@ model2 = ergm(fednetwork ~ edges +
 
 ```
 
+???
+
+Next, I add a endogenous covariate. Here I add a reciprocity term. The theory is that if 1 employees skill set transfers to another agency, then it is an indication that there is some general interchangable roles at these agencies (for example, data analysts are sort of general jobs, so if both agencies have a data analytics department then the probability of the reciprocal tie maybe increases). 
+
+
 ---
 # Endogenous Results
 
@@ -362,6 +379,9 @@ check2 = round(check$coefficients, 2) %>%
 
 ```
 
+???
+Here are the results with the endogenous term added. We see its pretty significant. We also observe that the agency type matches becomes significant. On one hand the other soefficients do not change sign or significantly change in magnitude, which I think is a good thing, but I'll also present the usual diagnostic plots. 
+
 ---
 # Diagnostic Plots
 
@@ -373,6 +393,11 @@ par(mfrow=c(3,2))
 plot(gof2)
 
 ```
+
+???
+
+These look pretty good, although maybe a bit off. Again, we are looking for the black line to be within the bounds of the box plots. In and out degrees seem ok, but the distance is a bit off. I tried messing around a bit with transitivity effects, but the mutuality specification seemed to work better.
+
 
 ---
 # Even more diagnostics
@@ -389,6 +414,8 @@ plot(gof2)
 <img src="chain2.png" style="width: 100%"/>
 ]
 
+??? The traceplots look ok. We don't see any trend and they seem to have relatively constant variance and are overlapping. 
+
 ---
 # Model Selection
 
@@ -399,8 +426,136 @@ kbl(AIC(model1, model2), booktabs = T, caption = "Compare AICs") %>%
 
 ```
 
+???
+
+Looking at the AIC, we see that adding the mutuality term improved the model a bit. 
+
+
+---
+# Conclusion
+
+* Brain drain process fully described (left no stone unturned)
+
+* Policy Implications
+
+???
+
+So overall, I've clearly described the brain drain process in the federal agency landscape. Of course, the policy implication are immense.
+
+---
+# Next Steps
+
+```{r}
+
+
+years = seq(1974, 2012, by = 1)
+
+nets = list()
+
+df = fed %>%
+  filter(n >= 5000) %>%
+  filter(n <= 20000) %>%
+  filter(n_nextpct <= .5)
+
+sources = df %>%
+  distinct(NAME) %>%
+  rename(label = NAME)
+
+destinations = df %>%
+  distinct(label = NAME_next)
+
+nodes = full_join(sources, destinations, by = "label")
+
+nodes = nodes %>%
+  rowid_to_column("id")
+
+#######################################################
+
+for (i in 1:length(years)) {
+  
+  df = fed %>%
+    filter(yr == years[i]) %>%
+    filter(n >= 1000) %>%
+    filter(n <= 20000) %>%
+    filter(n_nextpct <= .5)
+  
+  #### Add covariates to nodes
+  
+  ref2 = ref %>%
+    filter(yr == years[i]) %>%
+    select(n, agy_typ, med_sal_, agy_full) %>%
+    mutate(agy_full = toupper(agy_full))
+  
+  nodestemp = nodes %>%
+    left_join(ref2, by = c("label" = "agy_full")) %>%
+    drop_na()
+  
+  #### Make edges
+  
+  agy_set = expand.grid(unique(df$NAME), unique(df$NAME_next))
+  
+  agy_set = agy_set %>%
+    filter(as.character(Var1) != as.character(Var2)) %>%
+    rename(NAME = Var1, NAME_next = Var2)
+  
+  df2 = agy_set %>%
+    left_join(df) %>%
+    mutate(connected = ifelse(n_next > 7, 1, 0)) 
+  
+  df2$connected = replace_na(df2$connected, 0)
+  
+  df2 = df2 %>%
+    select(NAME, NAME_next, connected)
+  
+  df2 = df2 %>%
+    left_join(nodestemp, by = c("NAME" = "label")) %>%
+    rename(from = id)
+  
+  df2 = df2 %>%
+    left_join(nodestemp, by = c("NAME_next" = "label")) %>%
+    rename(to = id)
+  
+  df2 = df2 %>%
+    filter(from != to) %>%
+    filter(connected == 1)
+  
+  #### Make network
+  
+  temp = network(df2, vertex.attr = nodestemp, matrix.type = "edgelist")
+  nets[[i]] = temp
+  
+  
+}
+
+sampdyn = networkDynamic(network.list = nets, vertex.pid = "vertex.names")
 
 
 
+```
+
+---
+# Next steps
+
+```{r, results='asis'}
+
+render.d3movie(sampdyn, 
+               plot.par=list(displaylabels=T, label.cex = .45), 
+               label = network.vertex.names(sampdyn), 
+               render.par=list(tween.frames=3,
+                               show.time=TRUE,
+                               extraPlotCmds=NULL,
+                               initial.coords=0),
+               d3.options = list(animateOnLoad = TRUE, animationDuration = 3000,
+                                 durationControl=TRUE),
+               output.mode = 'inline')
+
+```
+
+???
+
+Well, the next steps are to extend this to a generalized ergm. The edges here are weighted. Also, the "brain drain" specification I've attempted here is a bit of a roundabout way. The real next step is to filter these edges to only include specialized employees. There's also this longitudinal aspect to consider. But that is all I have for now. Thank you for listening, 
+
+---
+# Thank you!
 
 
