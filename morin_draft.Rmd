@@ -38,3 +38,12 @@ fed = fed %>%
 
 # Introduction
 
+There is a call for better measurement and theoretical understanding of the capacity of bureaucratic organizations [@bersch]. In broad strokes, the capacity of an agency is its capability to achieve its organizational ends. For example, The United States Fish and Wildlife Service is tasked with conserving and protecting marine habitats. The agency has some latent and unobservable potential capacity to achieve these goals. 
+
+The measurement of this latent capacity is a complicated and debated topic [@fukuyama]. For example, the staffing requirements that allow the Fish and Wildlife Service to achieve its goals is likely fundamentally different than the requirements that would allow the Food and Drug Administration to accomplish its mission of protecting the health and safety of people. Despite these theoretical challenges, there is something to be gained when looking at the aggregate landscape of the federal employment workforce.
+
+Despite these theoretical challenges, changes in overall staffing is a crude proxy for capacity. All else equal, changing the overall staffing levels at an agency would impact its ability to achieve its ends. This is expected to be a positive correlation: increases in staff is an indication of growing capacity [@bersch]. 
+
+This paper examines the employment flows between federal agencies. When thinking about capacity, absorbing employees from the network represents
+
+# References
