@@ -25,6 +25,7 @@ library(statnet)
 library(ndtv)
 library(latticeExtra)
 library(kableExtra)
+library(gridExtra)
 
 ref = read.csv("fed_agency_capacity_autonomy.csv")
 fed = read.csv("r73_13_recoded_flows.csv")
@@ -50,7 +51,87 @@ This paper is mostly descriptive in that I examine some observational factors th
 
 # Data
 
+The data come from a Buzzfeed News Freedom of Information Act (FOI) request. It contains four decades of payroll data from the U.S. Office of Personnel Management. From 1973 to 2013, the data are uniquely identified. This allows us to track employees flowing in and out of federal employment as well as flowing between agencies. It also includes variables such as employee salary, age, and education levels.
+
+{Insert Descriptive Table Around Here (with number of agencies and variable distributions)}
 
 
+```{r, fig.cap = "Flows in and Out of Two Federal Agencies"}
+
+test = fed %>%
+  filter(AGYSUB_next != "EXIT")
+
+test = test %>%
+  filter(AGYSUB == "EDEN" | AGYSUB_next == "EDEN")
+
+test2 = test %>%
+  group_by(yr) %>%
+  summarize(Sent = sum(AGYSUB == "EDEN"), Received = sum(AGYSUB_next == "EDEN"))
+
+test3 = test %>%
+  filter(AGYSUB == "EDEN") %>%
+  group_by(yr) %>%
+  slice(1) 
+
+test2 = test2 %>%
+  mutate(Sent = Sent / test3$n) %>%
+  mutate(Received = Received / test3$n) %>%
+  gather(key = Measure, value = Edge, 2:3) 
+  
+
+b = test2 %>%
+  ggplot(aes(x = yr, y = Edge)) +
+  geom_line(aes(group = Measure, color = Measure), size = 1.5) +
+  ylab("Proportion of Employees") +
+  xlab("Year") +
+  theme_bw() +
+  scale_color_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = c(1973, seq(1976, 2010, by = 4,), 2012), minor_breaks = 1973:2012) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  ggtitle("Federal Student Aid") +
+  theme(legend.position="top") +
+  theme(plot.title = element_text(size=10))
+
+
+test = fed %>%
+  filter(AGYSUB_next != "EXIT")
+
+test = test %>%
+  filter(AGYSUB == "EP00" | AGYSUB_next == "EP00")
+
+test2 = test %>%
+  group_by(yr) %>%
+  summarize(Sent = sum(AGYSUB == "EP00"), Received = sum(AGYSUB_next == "EP00"))
+
+test3 = test %>%
+  filter(AGYSUB == "EP00") %>%
+  group_by(yr) %>%
+  slice(1) 
+
+test2 = test2 %>%
+  mutate(Sent = Sent / test3$n) %>%
+  mutate(Received = Received / test3$n) %>%
+  gather(key = Measure, value = Edge, 2:3) 
+
+
+a = test2 %>%
+  ggplot(aes(x = yr, y = Edge)) +
+  geom_line(aes(group = Measure, color = Measure), size = 1.5) +
+  ylab("Proportion of Employees") +
+  xlab("Year") +
+  theme_bw() +
+  scale_color_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = c(1973, seq(1976, 2010, by = 4,), 2012), minor_breaks = 1973:2012) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  ggtitle("Environmental Protection Agency") +
+  theme(legend.position="top") +
+  theme(plot.title = element_text(size=10))
+
+
+grid.arrange(a, b, nrow = 1)
+
+```
+
+For exploratory purposes, I compare the proportion of employees that left another agency to work for Environmental Protection Agency (EPA) and the Federal Student Aid Agency (FSA) as well the proportion of employees that left the agencies to work elsewhere in the federal government (See Figure 1). In proportion terms, the proportion that left the EPA are somewhat small. For example, in 2012, 48 employees left the EPA to work at another agency which is relatively low compared to the 18,045 employees that were on the payroll that year. Moreover, there are distinctly different patterns. There is a small period between 1984 and 1990 where the EPA was absorbing more employees than it was losing. In contrast, FSA consistently absorbed employees for most of the years. 
 
 # References
