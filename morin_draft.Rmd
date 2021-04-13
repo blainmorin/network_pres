@@ -22,6 +22,7 @@ library(readr)
 library(knitr)
 library(kableExtra)
 library(statnet)
+library(bookdown)
 library(ndtv)
 library(latticeExtra)
 library(kableExtra)
@@ -39,21 +40,21 @@ fed = fed %>%
 
 # Introduction
 
-There is a call for better measurement and theoretical understanding of the capacity of bureaucratic organizations [@bersch]. In broad strokes, the capacity of an agency is its capability to achieve its organizational ends. For example, The United States Fish and Wildlife Service is tasked with conserving and protecting marine habitats. The agency has some latent and unobservable potential capacity to achieve these goals. 
+There is a call for better measurement and theoretical understanding of the capacity of bureaucratic organizations [@bersch]. In broad strokes, the capacity of an agency is its capability to achieve its organizational ends. For example, The United States Fish and Wildlife Service is tasked with conserving and protecting marine habitats and it has some latent and unobservable potential capacity to achieve these aims. 
 
-The measurement of this latent capacity is a complicated and debated topic [@fukuyama]. For example, the staffing requirements that allow the Fish and Wildlife Service to achieve its goals is likely fundamentally different than the requirements that would allow the Food and Drug Administration to accomplish its mission of protecting the health and safety of people. Despite these theoretical challenges, there is something to be gained when looking at the aggregate landscape of the federal employment workforce.
+The measurement of this latent capacity is a complicated and debated topic [@fukuyama]. For example, the staffing requirements that allow the Fish and Wildlife Service to achieve its goals is likely fundamentally different than the requirements that would allow the Food and Drug Administration to accomplish its mission of protecting the health and safety of people. 
 
-Despite these theoretical challenges, changes in overall staffing is a crude proxy for capacity. All else equal, changing the overall staffing levels at an agency would impact its ability to achieve its ends. This is expected to be a positive correlation: increases in staff is an indication of growing capacity [@bersch]. 
+Despite these theoretical challenges, there is something to be gained when looking at the aggregate landscape of the federal employee workforce. Changes in overall staffing are a crude proxy for capacity. All else equal, changing the overall staffing levels at an agency would impact its ability to achieve its ends. This is expected to be a positive correlation: increases in staff is an indication of growing capacity [@bersch]. 
 
 This paper examines the employment flows between federal agencies. When thinking about capacity, absorbing employees from the network represents both an increase in capacity due to increased employment and a possible marginal benefit of increased institutional awareness. In other words, gaining employees from other agencies increases the informational diversity within the agency, which may add to its capacity [@jehn].
 
-This paper is mostly descriptive in that I examine some observational factors that are associated with employment flows. Further analyses (i.e., when I can get the data wrangled and get the GERGMs to run), will investigate more nuanced phenomenon.
+This paper is mostly descriptive in that I examine some observational factors that are associated with employment flows. Further analyses (i.e., when I can get the data wrangled and get the GERGMs to run), will investigate a more nuanced phenomenon.
 
 # Data
 
 The data come from a Buzzfeed News Freedom of Information Act (FOI) request. It contains four decades of payroll data from the U.S. Office of Personnel Management. From 1973 to 2013, the data are uniquely identified. This allows us to track employees flowing in and out of federal employment as well as flowing between agencies. It also includes variables such as employee salary, age, and education levels.
 
-{Insert Descriptive Table Around Here (with number of agencies and variable distributions)}
+{Insert Descriptive Table Around Here (with number of agencies, variable distributions, etc)}
 
 
 ```{r, fig.cap = "Flows in and Out of Two Federal Agencies"}
@@ -132,7 +133,7 @@ grid.arrange(a, b, nrow = 1)
 
 ```
 
-For exploratory purposes, I compare the proportion of employees that left another agency to work for Environmental Protection Agency (EPA) and the Federal Student Aid Agency (FSA) as well the proportion of employees that left the agencies to work elsewhere in the federal government (See Figure 1). In proportion terms, the proportion that left the EPA are somewhat small. For example, in 2012, 48 employees left the EPA to work at another agency which is relatively low compared to the 18,045 employees that were on the payroll that year. Moreover, there are distinctly different patterns. There is a small period between 1984 and 1990 where the EPA was absorbing more employees than it was losing. In contrast, FSA consistently absorbed employees for most of the years. 
+For exploratory purposes, I compare the proportion of employees that left another agency to work for the Environmental Protection Agency (EPA) and the Federal Student Aid Agency (FSA) as well the proportion of employees that left the agencies to work elsewhere in the federal government (See Figure 1). In proportion terms, the proportion that left the EPA is somewhat small. For example, in 2012, 48 employees left the EPA to work at another agency which is relatively low compared to the 18,045 employees that were on the payroll that year. Moreover, there are distinctly different patterns. There is a small period between 1984 and 1990 where the EPA was absorbing more employees than it was losing. In contrast, FSA consistently absorbed employees for most of the years. 
 
 ```{r, fig.height=6, fig.cap = "Thinned Binary Directed Network"}
 
@@ -251,19 +252,20 @@ ggraph(net.tidy) +
 
 ```
 
-Using the Buzzfeed data, I construct a an employment network that shows the flow between agencies. In Figure 2, I present thinned network where the different Agencies are the nodes and the edges represent an instance where more than 2\% of an agencies employees left to another between the years 1980 and 1990. These edges are binary and are limited to agencies with greater than 5,000 employees. These parameters were chosen to simplify the network for preliminary modeling purposes. I chose a 2\% threshold because it seemed to represent a significant flow. 
+Using the Buzzfeed data, I construct an employment network that shows the flow between agencies. In Figure 2, I present thinned network where the different agencies are the nodes and the edges represent an instance where more than 2\% of an agency’s employees left to another between the years 1980 and 1990. These edges are binary and are limited to agencies with greater than 5,000 employees. These parameters were chosen to simplify the network for preliminary modeling purposes. I chose a 2\% threshold because it seemed to represent a significant flow. 
 
 ## Theory and Analysis
 
 To start, I run a simple logit model with only exogenous covariates (which are all node characteristics). The four exogenous covariates are:
 
-* The proportional budget increase of the agency over the last ten years. For example, if an agency's budget grew by 100\% over the past ten year, then this variable is coded as a 1. For this first term, I am expecting that an increase in budget increases the ability of an agency to poach from other agencies. Thus, I expect this variable to be positively correlated with the number of in-edges at an agency.
+* The proportional budget increase of the agency over the last ten years. For example, if an agency's budget grew by 100\% over the past ten years, then this variable is coded as a 1. For this first term, I am expecting that an increase in budget increases the ability of an agency to poach from other agencies. Thus, I expect this variable to be positively correlated with the number of in-edges at an agency.
 
 * The increase in professionalization over the last ten years (indicated by an increase in people with master's degrees or higher). Although the specific educational degree is unknown, I expect that agencies with similar patterns of professionalization would have a similar demand for certain types of jobs. Thus, I expect a positive correlation between educational homophily and edge formation. 
 
-* Agency Type. The agency type is the code used to describe the agency by the U.S. Office of Budget and Management. For example the EPA is coded as an "Environment and Natural Resources Agency." Similar to the homophily in education hypothesis, I expect that matching on agency type will be positively correlated with edge formation.
+* Agency Type. The agency type is the code used to describe the agency by the U.S. Office of Budget and Management. For example, the EPA is coded as an "Environment and Natural Resources Agency." Similar to the homophily in education hypothesis, I expect that matching on agency type will be positively correlated with edge formation.
 
 * Median Salary of the agency. I expect that agencies that pay their employees a higher salary will be better able to poach employees from other agencies. Thus, I expect a positive correlation between salaries and in-edge formation.
+
 
 ```{r}
 
@@ -299,9 +301,10 @@ check2 = round(check$coefficients, 2) %>%
 
 As seen in Table 1, there is significant evidence that professionalization homophily is associated with a 4% increase in the odds of an edge forming. Salary is also significantly associated with in-edge formation. The salary units are in \$10,000. Thus, a \$10,000 increase in the median salary of an agency is associated with an 11\% increase in the odds of an in-edge. Budget increases were not significant in in-edge formation, nor was agency type homophily.
 
-Next, I incorporate endogenous dependencies in the model. For now, I include 1 endogenous covaiate:
+Next, I incorporate endogenous dependencies in the model. For now, I include 1 endogenous covariate:
 
-* Mutuality: Mutuality means that if employees leave one agency to go to another, than it is may be more likely that employees at that receiving agency will leave for the other. This may be true if the mutuality is a signal that the jobs at the agency have similar functions.
+* Mutuality: Mutuality means that if employees leave one agency to go to another then it may be more likely that employees at that receiving agency will also leave for the other. This may be true if the mutuality is a signal that the jobs at the agency have similar functions.
+
 
 ```{r}
 
@@ -340,9 +343,25 @@ check2 = round(check$coefficients, 2) %>%
 
 The z values are suspiciously high. I need to figure out what is going on here.
 
+# Discussion and Conclusion
+
+Work in progress.
+
 # References
 
 <div id="refs"></div>
 
-# (APPENDIX) Appendix {-} 
+# Appendix: ERGM Diagnostics
 
+```{r, fig.height=6}
+
+gof2 = gof(model2)
+
+par(mfrow=c(3,2))
+plot(gof2)
+
+```
+
+![](chain4.PNG)
+
+![](chain3.PNG)
